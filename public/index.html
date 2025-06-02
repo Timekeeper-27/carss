@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gibson EK Car Deal Scraper</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-image: url('background.jpg');
+            background-size: cover;
+            background-attachment: fixed;
+            background-repeat: no-repeat;
+            color: white;
+        }
+        .container {
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 2rem;
+            border-radius: 15px;
+            margin-top: 50px;
+        }
+        h1 {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-weight: bold;
+            text-align: center;
+        }
+        table {
+            background-color: white;
+            color: black;
+        }
+        .btn-primary {
+            background-color: #2c7a7b;
+            border-color: #2c7a7b;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚗 Gibson EK High School Car Deal Scraper</h1>
+        <div class="mb-3">
+            <input type="text" id="search" class="form-control" placeholder="Paste a car listings page URL...">
+        </div>
+        <div class="text-center mb-4">
+            <button onclick="startScraping()" class="btn btn-primary">Scrape Listings</button>
+        </div>
+        <div id="listings" class="table-responsive"></div>
+    </div>
+
+<script>
+async function startScraping() {
+    const url = document.getElementById('search').value;
+    if (!url) {
+        alert('Please paste a URL!');
+        return;
+    }
+    const res = await fetch(`/scrape?url=${encodeURIComponent(url)}`);
+    const data = await res.json();
+    if (data.listings.length === 0) {
+        document.getElementById('listings').innerHTML = '<p class="text-danger">No listings found. Try another site.</p>';
+        return;
+    }
+    let table = '<table class="table table-striped"><thead><tr><th>Title</th><th>Price</th><th>Link</th></tr></thead><tbody>';
+    data.listings.forEach(car => {
+        table += `<tr><td>${car.title}</td><td>$${car.price}</td><td><a href="${car.link}" target="_blank">View</a></td></tr>`;
+    });
+    table += '</tbody></table>';
+    document.getElementById('listings').innerHTML = table;
+}
+</script>
+
+</body>
+</html>
