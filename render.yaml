@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: universal-car-deal-scraper-final-smart
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
