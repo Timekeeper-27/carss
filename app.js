@@ -1,22 +1,17 @@
 const express = require('express');
 const app = express();
-const { chromium } = require('playwright');
 const path = require('path');
+const puppeteer = require('puppeteer-extra');
+const StealthPlugin = require('puppeteer-extra-plugin-stealth');
 
-console.log(`
-╔════════════════════════════════════════════════════╗
-║ 🚗 Universal Car Deal Scraper - Gibson EK Edition 🐾 ║
-╚════════════════════════════════════════════════════╝
-`);
+puppeteer.use(StealthPlugin());
 
 app.use(express.static('public'));
 
-// Home page
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// Scrape route
 app.get('/scrape', async (req, res) => {
     const url = req.query.url;
     if (!url) {
@@ -25,20 +20,23 @@ app.get('/scrape', async (req, res) => {
 
     let browser;
     try {
-        browser = await chromium.launch({
+        browser = await puppeteer.launch({
             headless: true,
             args: [
                 '--no-sandbox',
                 '--disable-setuid-sandbox',
-                '--disable-blink-features=AutomationControlled'
+                '--disable-blink-features=AutomationControlled',
+                '--lang=en-US,en;q=0.9',
+                '--window-size=1920,1080'
             ]
         });
 
         const page = await browser.newPage();
         await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36');
-        
+        await page.setViewport({ width: 1920, height: 1080 });
+
         console.log(`Navigating to ${url}...`);
-        await page.goto(url, { waitUntil: 'networkidle', timeout: 60000 });
+        await page.goto(url, { waitUntil: 'networkidle2', timeout: 60000 });
 
         const listings = await page.evaluate(() => {
             const items = [];
@@ -59,17 +57,15 @@ app.get('/scrape', async (req, res) => {
 
         await browser.close();
 
-        res.json({ listings: listings || [] });  // ✅ ALWAYS send valid JSON
+        res.json({ listings: listings || [] });
     } catch (error) {
         console.error('Scrape error:', error);
         if (browser) {
             await browser.close();
         }
-        // ✅ Send fallback valid JSON even on error
         res.status(500).json({ listings: [] });
     }
 });
 
-// Server start
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
