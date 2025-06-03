@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Gibson EK Car Deal Scraper</title>
+  <title>Gibson EK Car Deal Scraper (Stealth)</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
   <style>
     body {
-      background-image: url('background.jpg'); /* Local background */
+      background-image: url('background.jpg');
       background-size: cover;
       background-attachment: fixed;
       background-repeat: no-repeat;
@@ -36,25 +36,17 @@
 </head>
 <body>
   <div class="container">
-    <h1>🚗 Gibson EK High School Car Deal Scraper</h1>
+    <h1>🚗 Gibson EK High School Car Deal Scraper (Stealth Mode)</h1>
     <div class="mb-3">
       <input type="text" id="search" class="form-control" placeholder="Paste a car listings page URL..."/>
     </div>
     <div class="text-center mb-4">
-      <button onclick="startScraping()" class="btn btn-primary">Scrape Listings</button>
+      <button onclick="startScraping()" class="btn btn-primary" type="button">Scrape Listings</button>
     </div>
     <div id="listings" class="table-responsive"></div>
   </div>
 
   <script>
-    // 🔥 FIX: Stop Enter key from reloading the page
-    document.getElementById('search').addEventListener('keypress', function(event) {
-      if (event.key === 'Enter') {
-        event.preventDefault(); // 🚫 Prevent form submission
-        startScraping();        // ✅ Trigger scraping instead
-      }
-    });
-
     async function startScraping() {
       const url = document.getElementById('search').value;
       if (!url) {
@@ -63,6 +55,10 @@
       }
       try {
         const res = await fetch(`/scrape?url=${encodeURIComponent(url)}`);
+        const contentType = res.headers.get("content-type") || "";
+        if (!contentType.includes("application/json")) {
+          throw new Error("Server did not return JSON. Website may block scraping.");
+        }
         const data = await res.json();
         if (data.listings.length === 0) {
           document.getElementById('listings').innerHTML = '<p class="text-danger">No listings found. Try another site.</p>';
