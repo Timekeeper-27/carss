@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Universal Car Deal Rater</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 30px;
+            text-align: center;
+        }
+        input, button {
+            padding: 10px;
+            margin: 10px;
+            width: 300px;
+            font-size: 16px;
+        }
+        .results {
+            margin-top: 20px;
+        }
+        .listing {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin: 10px auto;
+            width: 60%;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+    <h1>Universal Car Deal Rater 🚗</h1>
+    <input id="urlInput" type="text" placeholder="Enter Car Listing Page URL" />
+    <br>
+    <button onclick="scrape()">Scrape Listings</button>
+    <div class="results" id="results"></div>
+
+    <script>
+        async function scrape() {
+            const url = document.getElementById('urlInput').value;
+            if (!url) {
+                alert('Please enter a URL.');
+                return;
+            }
+            const response = await fetch('/scrape', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ url })
+            });
+            const data = await response.json();
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '';
+
+            if (data.listings) {
+                data.listings.forEach(car => {
+                    const carDiv = document.createElement('div');
+                    carDiv.className = 'listing';
+                    carDiv.innerHTML = `<strong>${car.title}</strong><br>Price: ${car.price}<br><a href="${car.link}" target="_blank">View Listing</a>`;
+                    resultsDiv.appendChild(carDiv);
+                });
+            } else {
+                resultsDiv.innerHTML = 'No listings found or an error occurred.';
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,15 @@
+{
+  "name": "universal-car-deal-scraper",
+  "version": "1.5.0",
+  "description": "Universal Car Listing Scraper with Smart Stealth & Human Simulation",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "puppeteer-extra": "^3.3.5",
+    "puppeteer-extra-plugin-stealth": "^2.11.1",
+    "puppeteer": "^22.8.2"
+  }
+}
