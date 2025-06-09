@@ -51,6 +51,31 @@ function parsePrice(text) {
     return isNaN(num) ? 0 : num;
 }
 
+// Simple promise-based delay helper
+function delay(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+// Try scraping listings using a specific set of selectors
+async function scrapeWithSelectors(page, selectors) {
+    try {
+        return await page.$$eval(selectors.container, (nodes, sel) => {
+            return nodes.map(node => {
+                const titleEl = node.querySelector(sel.title);
+                const priceEl = node.querySelector(sel.price);
+                const linkEl = node.querySelector('a');
+                return {
+                    title: titleEl ? titleEl.textContent.trim() : '',
+                    price: priceEl ? priceEl.textContent.trim() : '',
+                    link: linkEl ? linkEl.href : ''
+                };
+            });
+        }, selectors);
+    } catch (err) {
+        return [];
+    }
+}
+
 
 }
 
@@ -83,6 +108,7 @@ app.post('/scrape', async (req, res) => {
         browser = await puppeteer.launch({
             headless: process.env.HEADLESS === 'false' ? false : 'new',
             slowMo: 50,
+            ignoreHTTPSErrors: true,
             args: [
                 '--no-sandbox',
                 '--disable-setuid-sandbox',
