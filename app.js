@@ -12,6 +12,9 @@ function initPuppeteer() {
 }
 const path = require('path');
 
+// Simple helper for pauses between actions
+const delay = ms => new Promise(res => setTimeout(res, ms));
+
 
 // Common selector sets for various dealership websites
 const SELECTOR_SETS = [
@@ -46,6 +49,31 @@ const SELECTOR_SETS = [
 function parsePrice(text) {
     const num = parseFloat(text.replace(/[^0-9.]/g, ''));
     return isNaN(num) ? 0 : num;
+}
+
+// Extract listings for a given set of selectors within the page context
+async function scrapeWithSelectors(page, selectors) {
+    return await page.evaluate(({ container, title, price }) => {
+        const results = [];
+        const cars = document.querySelectorAll(container);
+        cars.forEach(car => {
+            const titleElement = car.querySelector(title);
+            const priceElement = car.querySelector(price);
+            let link = car.href;
+            if (!link) {
+                const a = car.querySelector('a');
+                if (a) link = a.href;
+            }
+            if (titleElement && priceElement) {
+                results.push({
+                    title: titleElement.innerText.trim(),
+                    price: priceElement.innerText.trim(),
+                    link: link || ''
+                });
+            }
+        });
+        return results;
+    }, selectors);
 }
 
 
