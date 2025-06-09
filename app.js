@@ -1,6 +1,15 @@
 const express = require('express');
-const puppeteer = require('puppeteer-extra');
-const StealthPlugin = require('puppeteer-extra-plugin-stealth');
+let puppeteer;
+let StealthPlugin;
+
+function initPuppeteer() {
+    if (!puppeteer) {
+        puppeteer = require('puppeteer-extra');
+        StealthPlugin = require('puppeteer-extra-plugin-stealth');
+        puppeteer.use(StealthPlugin());
+    }
+    return puppeteer;
+}
 const path = require('path');
 
 // Helper to parse price text like "$25,000" to a number (25000)
@@ -9,7 +18,6 @@ function parsePrice(text) {
     return isNaN(num) ? 0 : num;
 }
 
-puppeteer.use(StealthPlugin());
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -34,6 +42,7 @@ app.post('/scrape', async (req, res) => {
 
     try {
         console.log(`Navigating to ${url}...`);
+        const puppeteer = initPuppeteer();
         browser = await puppeteer.launch({
             headless: false,
             slowMo: 50,
@@ -89,4 +98,8 @@ app.post('/scrape', async (req, res) => {
     }
 });
 
-app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+if (require.main === module) {
+    app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+}
+
+module.exports = app;
