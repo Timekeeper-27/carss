@@ -12,11 +12,41 @@ function initPuppeteer() {
 }
 const path = require('path');
 
+// Common selector sets for various dealership websites
+const SELECTOR_SETS = [
+    {
+        container: 'a[data-qaid="cntnr-invCard"]',
+        title: 'span[data-qaid="cntnr-title"]',
+        price: 'div[data-qaid="cntnr-price"]'
+    },
+    {
+        container: '.vehicle-card',
+        title: '.title',
+        price: '.first-price'
+    },
+    {
+        container: '.inventory-listing',
+        title: '.title',
+        price: '.primary-price'
+    },
+    {
+        container: '.listing',
+        title: '.title',
+        price: '.price'
+    },
+    {
+        container: '.vehicle-item',
+        title: '.vehicle-title',
+        price: '.vehicle-price'
+    }
+];
+
 // Helper to parse price text like "$25,000" to a number (25000)
 function parsePrice(text) {
     const num = parseFloat(text.replace(/[^0-9.]/g, ''));
     return isNaN(num) ? 0 : num;
 }
+
 
 
 const app = express();
@@ -67,21 +97,38 @@ app.post('/scrape', async (req, res) => {
         await page.keyboard.press('ArrowDown');
         await page.waitForTimeout(1000);
 
-        let listings = await page.evaluate(() => {
-            const results = [];
-            const cars = document.querySelectorAll('a[data-qaid="cntnr-invCard"]');
-            cars.forEach(car => {
-                const titleElement = car.querySelector('span[data-qaid="cntnr-title"]');
-                const priceElement = car.querySelector('div[data-qaid="cntnr-price"]');
-                if (titleElement && priceElement) {
-                    results.push({
-                        title: titleElement.innerText.trim(),
-                        price: priceElement.innerText.trim(),
-                        link: car.href
-                    });
-                }
-            });
-            return results;
+        let listings = [];
+        for (const sel of SELECTOR_SETS) {
+            listings = await scrapeWithSelectors(page, sel);
+            if (listings.length) break;
+        }
+
+        listings.forEach(l => {
+            l.numPrice = parsePrice(l.price);
+        });
+
+        const avgPrice = listings.reduce((sum, l) => sum + l.numPrice, 0) /
+            (listings.length || 1);
+
+        listings = listings.map(l => {
+            let rating, reason;
+            if (l.numPrice <= avgPrice * 0.9) {
+                rating = 'green';
+                reason = 'Below average price';
+            } else if (l.numPrice <= avgPrice * 1.1) {
+                rating = 'yellow';
+                reason = 'Around average price';
+            } else {
+                rating = 'red';
+                reason = 'Above average price';
+            }
+            return {
+                title: l.title,
+                price: l.price,
+                link: l.link,
+                rating,
+                reason
+            };
         });
 
         await browser.close();
