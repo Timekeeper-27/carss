@@ -1,7 +1,7 @@
 {
-  "name": "universal-car-deal-scraper",
+  "name": "universal-car-deal-rater",
   "version": "1.5.0",
-  "description": "Universal Car Listing Scraper with Smart Stealth & Human Simulation",
+  "description": "Universal Car Listing Rater with Smart Stealth & Human Simulation",
   "main": "app.js",
   "scripts": {
     "start": "node app.js"
