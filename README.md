@@ -22,5 +22,3 @@ means the price is above average.
 ## Requirements
 - Node.js 18+
 - Windows 10/11
-
----
