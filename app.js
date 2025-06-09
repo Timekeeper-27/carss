@@ -75,17 +75,16 @@ app.post('/scrape', async (req, res) => {
             return results;
         });
 
-
+        await browser.close();
         console.log(`Scraping complete. Listings found: ${listings.length}`);
         res.json({ listings });
 
     } catch (error) {
         console.error('Scraping error:', error);
-        res.status(500).json({ error: 'Scraping failed. Please check the URL and try again.' });
-    } finally {
         if (browser) {
             await browser.close();
         }
+        res.status(500).json({ error: 'Scraping failed. Please check the URL and try again.' });
     }
 });
 
