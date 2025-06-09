@@ -12,6 +12,7 @@ function initPuppeteer() {
 }
 const path = require('path');
 
+
 // Common selector sets for various dealership websites
 const SELECTOR_SETS = [
     {
@@ -74,7 +75,7 @@ app.post('/scrape', async (req, res) => {
         console.log(`Navigating to ${url}...`);
         const puppeteer = initPuppeteer();
         browser = await puppeteer.launch({
-            headless: false,
+            headless: process.env.HEADLESS === 'false' ? false : 'new',
             slowMo: 50,
             args: [
                 '--no-sandbox',
@@ -89,13 +90,13 @@ app.post('/scrape', async (req, res) => {
 
         // Human-like actions
         await page.mouse.move(100, 100);
-        await page.waitForTimeout(500);
+        await delay(500);
         await page.mouse.move(200, 300);
-        await page.waitForTimeout(500);
+        await delay(500);
         await page.mouse.move(300, 500);
         await page.keyboard.press('ArrowDown');
         await page.keyboard.press('ArrowDown');
-        await page.waitForTimeout(1000);
+
 
         let listings = [];
         for (const sel of SELECTOR_SETS) {
