@@ -1,9 +1,17 @@
 const express = require('express');
-const puppeteer = require('puppeteer-extra');
-const StealthPlugin = require('puppeteer-extra-plugin-stealth');
+let puppeteer;
+let StealthPlugin;
+
+function initPuppeteer() {
+    if (!puppeteer) {
+        puppeteer = require('puppeteer-extra');
+        StealthPlugin = require('puppeteer-extra-plugin-stealth');
+        puppeteer.use(StealthPlugin());
+    }
+    return puppeteer;
+}
 const path = require('path');
 
-const delay = ms => new Promise(res => setTimeout(res, ms));
 
 // Common selector sets for various dealership websites
 const SELECTOR_SETS = [
@@ -40,31 +48,7 @@ function parsePrice(text) {
     return isNaN(num) ? 0 : num;
 }
 
-async function scrapeWithSelectors(page, selectors) {
-    return await page.evaluate(({ container, title, price }) => {
-        const results = [];
-        const cars = document.querySelectorAll(container);
-        cars.forEach(car => {
-            const titleElement = car.querySelector(title);
-            const priceElement = car.querySelector(price);
-            let link = car.href;
-            if (!link) {
-                const a = car.querySelector('a');
-                if (a) link = a.href;
-            }
-            if (titleElement && priceElement) {
-                results.push({
-                    title: titleElement.innerText.trim(),
-                    price: priceElement.innerText.trim(),
-                    link: link || ''
-                });
-            }
-        });
-        return results;
-    }, selectors);
-}
 
-puppeteer.use(StealthPlugin());
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -89,6 +73,7 @@ app.post('/scrape', async (req, res) => {
 
     try {
         console.log(`Navigating to ${url}...`);
+        const puppeteer = initPuppeteer();
         browser = await puppeteer.launch({
             headless: process.env.HEADLESS === 'false' ? false : 'new',
             slowMo: 50,
@@ -111,7 +96,7 @@ app.post('/scrape', async (req, res) => {
         await page.mouse.move(300, 500);
         await page.keyboard.press('ArrowDown');
         await page.keyboard.press('ArrowDown');
-        await delay(1000);
+
 
         let listings = [];
         for (const sel of SELECTOR_SETS) {
@@ -160,4 +145,8 @@ app.post('/scrape', async (req, res) => {
     }
 });
 
-app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+if (require.main === module) {
+    app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+}
+
+module.exports = app;

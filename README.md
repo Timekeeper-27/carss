@@ -1,4 +1,4 @@
-# Universal Car Deal Scraper 🚗
+# Universal Car Deal rater 🚗
 
 Scrape and analyze car listings from many dealership websites with stealth and human-like browsing.
 
