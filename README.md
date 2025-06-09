@@ -7,7 +7,11 @@ Scrape and analyze car listings from dealership websites with stealth and human-
 - Random mouse movements and keypresses
 - Bypasses basic bot detection
 - Supports most car dealership websites
-- Outputs clean listing titles, prices, and links
+- Outputs clean listing titles, prices, links, and a color-coded deal rating
+
+Listings are rated based on their price relative to the page average:
+**green** indicates a great deal, **yellow** is around average, and **red**
+means the price is above average.
 
 ## How to Use
 1. Extract ZIP file.
