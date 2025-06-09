@@ -24,9 +24,11 @@ app.post('/scrape', async (req, res) => {
         return res.status(400).json({ error: 'Missing URL' });
     }
 
+    let browser;
+
     try {
         console.log(`Navigating to ${url}...`);
-        const browser = await puppeteer.launch({
+        browser = await puppeteer.launch({
             headless: false,
             slowMo: 50,
             args: [
@@ -67,13 +69,17 @@ app.post('/scrape', async (req, res) => {
             return results;
         });
 
-        await browser.close();
+
         console.log(`Scraping complete. Listings found: ${listings.length}`);
         res.json({ listings });
 
     } catch (error) {
         console.error('Scraping error:', error);
         res.status(500).json({ error: 'Scraping failed. Please check the URL and try again.' });
+    } finally {
+        if (browser) {
+            await browser.close();
+        }
     }
 });
 
