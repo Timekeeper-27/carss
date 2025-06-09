@@ -25,10 +25,18 @@
             width: 60%;
             text-align: left;
         }
+        .green { background-color: #d4edda; }
+        .yellow { background-color: #fff3cd; }
+        .red { background-color: #f8d7da; }
     </style>
 </head>
 <body>
     <h1>Universal Car Deal Rater 🚗</h1>
+    <p>
+        <span style="background:#d4edda;padding:3px 6px;">Green</span> good deal,
+        <span style="background:#fff3cd;padding:3px 6px;">Yellow</span> fair,
+        <span style="background:#f8d7da;padding:3px 6px;">Red</span> overpriced
+    </p>
     <input id="urlInput" type="text" placeholder="Enter Car Listing Page URL" />
     <br>
     <button onclick="scrape()">Scrape Listings</button>
@@ -53,8 +61,8 @@
             if (data.listings) {
                 data.listings.forEach(car => {
                     const carDiv = document.createElement('div');
-                    carDiv.className = 'listing';
-                    carDiv.innerHTML = `<strong>${car.title}</strong><br>Price: ${car.price}<br><a href="${car.link}" target="_blank">View Listing</a>`;
+                    carDiv.className = `listing ${car.rating}`;
+                    carDiv.innerHTML = `<strong>${car.title}</strong><br>Price: ${car.price}<br>Rating: ${car.rating} - ${car.reason}<br><a href="${car.link}" target="_blank">View Listing</a>`;
                     resultsDiv.appendChild(carDiv);
                 });
             } else {

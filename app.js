@@ -3,6 +3,12 @@ const puppeteer = require('puppeteer-extra');
 const StealthPlugin = require('puppeteer-extra-plugin-stealth');
 const path = require('path');
 
+// Helper to parse price text like "$25,000" to a number (25000)
+function parsePrice(text) {
+    const num = parseFloat(text.replace(/[^0-9.]/g, ''));
+    return isNaN(num) ? 0 : num;
+}
+
 puppeteer.use(StealthPlugin());
 
 const app = express();
@@ -50,7 +56,7 @@ app.post('/scrape', async (req, res) => {
         await page.keyboard.press('ArrowDown');
         await page.waitForTimeout(1000);
 
-        const listings = await page.evaluate(() => {
+        let listings = await page.evaluate(() => {
             const results = [];
             const cars = document.querySelectorAll('a[data-qaid="cntnr-invCard"]');
             cars.forEach(car => {
@@ -65,6 +71,26 @@ app.post('/scrape', async (req, res) => {
                 }
             });
             return results;
+        });
+
+        // Compute average price from scraped listings
+        const prices = listings
+            .map(car => parsePrice(car.price))
+            .filter(p => p > 0);
+        const avg = prices.reduce((a, b) => a + b, 0) / (prices.length || 1);
+
+        listings = listings.map(car => {
+            const value = parsePrice(car.price);
+            let rating = 'yellow';
+            let reason = 'Price near market average';
+            if (value <= avg * 0.9 && value > 0) {
+                rating = 'green';
+                reason = 'Price below market average';
+            } else if (value > avg * 1.1) {
+                rating = 'red';
+                reason = 'Price above market average';
+            }
+            return { ...car, rating, reason };
         });
 
         await browser.close();
