@@ -30,9 +30,11 @@ app.post('/scrape', async (req, res) => {
         return res.status(400).json({ error: 'Missing URL' });
     }
 
+    let browser;
+
     try {
         console.log(`Navigating to ${url}...`);
-        const browser = await puppeteer.launch({
+        browser = await puppeteer.launch({
             headless: false,
             slowMo: 50,
             args: [
@@ -73,33 +75,17 @@ app.post('/scrape', async (req, res) => {
             return results;
         });
 
-        // Compute average price from scraped listings
-        const prices = listings
-            .map(car => parsePrice(car.price))
-            .filter(p => p > 0);
-        const avg = prices.reduce((a, b) => a + b, 0) / (prices.length || 1);
 
-        listings = listings.map(car => {
-            const value = parsePrice(car.price);
-            let rating = 'yellow';
-            let reason = 'Price near market average';
-            if (value <= avg * 0.9 && value > 0) {
-                rating = 'green';
-                reason = 'Price below market average';
-            } else if (value > avg * 1.1) {
-                rating = 'red';
-                reason = 'Price above market average';
-            }
-            return { ...car, rating, reason };
-        });
-
-        await browser.close();
         console.log(`Scraping complete. Listings found: ${listings.length}`);
         res.json({ listings });
 
     } catch (error) {
         console.error('Scraping error:', error);
         res.status(500).json({ error: 'Scraping failed. Please check the URL and try again.' });
+    } finally {
+        if (browser) {
+            await browser.close();
+        }
     }
 });
 
