@@ -1,6 +1,15 @@
 const express = require('express');
-const puppeteer = require('puppeteer-extra');
-const StealthPlugin = require('puppeteer-extra-plugin-stealth');
+let puppeteer;
+let StealthPlugin;
+
+function initPuppeteer() {
+    if (!puppeteer) {
+        puppeteer = require('puppeteer-extra');
+        StealthPlugin = require('puppeteer-extra-plugin-stealth');
+        puppeteer.use(StealthPlugin());
+    }
+    return puppeteer;
+}
 const path = require('path');
 
 // Common selector sets for various dealership websites
@@ -38,31 +47,7 @@ function parsePrice(text) {
     return isNaN(num) ? 0 : num;
 }
 
-async function scrapeWithSelectors(page, selectors) {
-    return await page.evaluate(({ container, title, price }) => {
-        const results = [];
-        const cars = document.querySelectorAll(container);
-        cars.forEach(car => {
-            const titleElement = car.querySelector(title);
-            const priceElement = car.querySelector(price);
-            let link = car.href;
-            if (!link) {
-                const a = car.querySelector('a');
-                if (a) link = a.href;
-            }
-            if (titleElement && priceElement) {
-                results.push({
-                    title: titleElement.innerText.trim(),
-                    price: priceElement.innerText.trim(),
-                    link: link || ''
-                });
-            }
-        });
-        return results;
-    }, selectors);
-}
 
-puppeteer.use(StealthPlugin());
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -87,6 +72,7 @@ app.post('/scrape', async (req, res) => {
 
     try {
         console.log(`Navigating to ${url}...`);
+        const puppeteer = initPuppeteer();
         browser = await puppeteer.launch({
             headless: false,
             slowMo: 50,
@@ -158,4 +144,8 @@ app.post('/scrape', async (req, res) => {
     }
 });
 
-app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+if (require.main === module) {
+    app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+}
+
+module.exports = app;
